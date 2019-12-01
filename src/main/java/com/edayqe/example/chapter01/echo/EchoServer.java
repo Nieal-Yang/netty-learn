@@ -10,13 +10,15 @@ import io.netty.handler.logging.LoggingHandler;
 public class EchoServer {
 
     public static void main(String[] args) {
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup bossGroup = new NioEventLoopGroup();
+        EventLoopGroup workGroup = new NioEventLoopGroup();
         final EchoServerHandler handler = new EchoServerHandler();
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(group)
+            bootstrap.group(bossGroup, workGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
+                    .option(ChannelOption.SO_BACKLOG, 100)
                     .childHandler(new ChannelInitializer() {
                         @Override
                         protected void initChannel(Channel channel) throws Exception {
@@ -30,7 +32,8 @@ public class EchoServer {
         } catch (Exception e) {
             System.out.println(e);
         } finally {
-            group.shutdownGracefully();
+            bossGroup.shutdownGracefully();
+            workGroup.shutdownGracefully();
         }
     }
 }
